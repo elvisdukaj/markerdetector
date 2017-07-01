@@ -91,9 +91,12 @@ MarksDetector::MarksDetector()
 
 void MarksDetector::processFame(cv::Mat& grayscale)
 {
-    m_markers.clear();
     m_contours.clear();
+    m_possibleContours.clear();
+    m_markers.clear();
+
     m_minCountournSize = grayscale.cols / 5;
+
     binarize(grayscale);
     findContours();
     findCandidates();
@@ -108,7 +111,7 @@ const std::vector<Marker> &MarksDetector::markers() const noexcept
 void MarksDetector::binarize(const cv::Mat& grayscale)
 {
     m_grayscale = grayscale;
-    cv::threshold(m_grayscale, m_binarized, 127, 255.0, cv::THRESH_BINARY /*| cv::THRESH_OTSU*/);
+    cv::threshold(m_grayscale, m_binarized, 127, 255.0, cv::THRESH_BINARY | cv::THRESH_OTSU);
 }
 
 void MarksDetector::findContours()
@@ -229,21 +232,15 @@ void MarksDetector::recognizeCandidates()
         cv::Mat markerTransform = cv::getPerspectiveTransform(points, m_markerCorners2d);
 
         // Transform image to get a canonical marker image
-        cv::warpPerspective(m_grayscale, canonicalMarkerImage,  markerTransform, m_markerSize);
-        cv::threshold(canonicalMarkerImage, canonicalMarkerImage, 0.0, 255.0f,
-                      cv::THRESH_BINARY | cv::THRESH_OTSU);
+        cv::warpPerspective(m_binarized, canonicalMarkerImage,  markerTransform, m_markerSize);
 
-        Marker m(canonicalMarkerImage.clone(), points);
+        Marker m(canonicalMarkerImage, points);
 
         if (!m.isValid())
             continue;
 
         cv::TermCriteria termCriteria = cv::TermCriteria{cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, 30, 0.01};
         cv::cornerSubPix(m_grayscale, points, cv::Size{5, 5}, cv::Size{-1, -1}, termCriteria);
-
-        cv::Mat image;
-        cv::cvtColor(m_grayscale, image, cv::COLOR_GRAY2BGR);
-        m.drawContours(image, cv::Scalar{255, 0, 0});
 
         m.precisePoints(points);
         m_markers.push_back(m);
@@ -279,8 +276,6 @@ Marker::Marker(const cv::Mat& image, const vector<cv::Point2f>& points)
 
     if (data.empty())
         return;
-
-//    cv::imshow("data", data);
 
     encodeData(data);
 }
@@ -552,6 +547,4 @@ void Marker::encodeData(const cv::Mat& dataImage)
     }
 
     m_isValid = true;
-
-//    qDebug() << "Found target ID: " << m_id;
 }
