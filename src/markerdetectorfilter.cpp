@@ -70,16 +70,18 @@ QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSu
 
         m_marksDetector.processFame(grayscale);
 
+
+        string idStr;
         if (!m_marksDetector.markers().empty())
         {
             for(const Marker& marker : m_marksDetector.markers())
-                marker.drawContours(frameMat, cv::Scalar{0, 255, 0});
-
-            auto idStr = to_string(m_marksDetector.markers()[0].id());
-
-
-            emit m_filter->markerFound(QString::fromStdString(idStr));
+            {
+                idStr += to_string(marker.id()) + " "s;
+                marker.drawContours(frameMat, 3);
+            }
         }
+
+        emit m_filter->markerFound(QString::fromStdString(idStr));
     }
     catch(const std::exception& exc)
     {
@@ -318,6 +320,7 @@ Marker::Marker(const cv::Mat& image, const vector<cv::Point2f>& points)
     , m_minArea{m_squareSize.area() / 2}
     , m_isValid{false}
     , m_points{points}
+    , m_color{Scalar::all(255)}
 {
     auto orientation = checkFrame(image);
 
@@ -337,10 +340,8 @@ void Marker::precisePoints(const std::vector<cv::Point2f>& points) noexcept
     m_points = points;
 }
 
-void Marker::drawContours(cv::Mat& image, cv::Scalar color) const noexcept
+void Marker::drawContours(cv::Mat& image, int thickness) const noexcept
 {
-    float thickness = 1;
-
     cv::line(image, m_points[0], m_points[1], m_color, thickness, CV_AA);
     cv::line(image, m_points[1], m_points[2], m_color, thickness, CV_AA);
     cv::line(image, m_points[2], m_points[3], m_color, thickness, CV_AA);
@@ -611,8 +612,5 @@ void Marker::encodeData(const cv::Mat& dataImage)
     auto b = (m_id & 0xff0000) >> 16;
 
     m_color = Scalar(r, g, b);
-
-    qDebug() << "color is #" << hex << r << g << b << " id: " << m_id;
-
     m_isValid = true;
 }

@@ -24,7 +24,7 @@ public:
     uint64_t id() const noexcept { return m_id; }
     const std::vector<cv::Point2f>& points() const noexcept { return m_points; }
     void precisePoints(const std::vector<cv::Point2f>& points) noexcept;
-    void drawContours(cv::Mat& image, cv::Scalar color) const noexcept;
+    void drawContours(cv::Mat& image, int thickness) const noexcept;
 
     void setCube(std::vector<std::vector<cv::Point2f>>& cube) { m_cube = cube; }
     void draw(cv::Mat& image);

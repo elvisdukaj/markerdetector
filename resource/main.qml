@@ -9,7 +9,7 @@ ApplicationWindow {
     visible: true
     width: 800
     height: 600
-    title: qsTr("Hello World")
+    title: qsTr("Markdetector Example")
 
     Camera {
         id: camera
@@ -50,7 +50,7 @@ ApplicationWindow {
 
         color: "black"
 
-        width: 100
+        width: 300
         height: 20
 
         opacity: 0.5
