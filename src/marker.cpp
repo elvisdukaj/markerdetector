@@ -290,13 +290,13 @@ void Marker::encodeData(const Mat& dataImage)
     if (crcBits.to_ullong() != crc.checksum())
     {
         cerr << "CRC Mismatch found " << dataBits.to_ullong() << " with crc "
-                 << crcBits.to_ullong() << " calculated " << crc.checksum();
+                 << crcBits.to_ullong() << " calculated " << crc.checksum() << endl;
         return;
     }
 
-    auto r = (m_id & 0x0000ff) >> 0;
-    auto g = (m_id & 0x00ff00) >> 8;
-    auto b = (m_id & 0xff0000) >> 16;
+    auto r = static_cast<int>((m_id & 0x0000ff) >> 0 );
+    auto g = static_cast<int>((m_id & 0x00ff00) >> 8 );
+    auto b = static_cast<int>((m_id & 0xff0000) >> 16);
 
     m_color = Scalar(r, g, b);
     m_isValid = true;

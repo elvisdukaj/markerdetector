@@ -23,7 +23,7 @@ QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSu
 {
     if (!isFrameValid(frame))
     {
-        cerr << "Frame is NOT valid";
+        cerr << "Frame is NOT valid" << endl;
         return QVideoFrame{};
     }
 
@@ -55,7 +55,7 @@ QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSu
     }
     catch(const exception& exc)
     {
-        cerr << exc.what();
+        cerr << exc.what() << endl;
     }
 
     frame->unmap();
