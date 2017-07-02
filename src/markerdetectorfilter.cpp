@@ -9,6 +9,7 @@
 #include <string>
 #include <algorithm>
 
+using namespace cv;
 using namespace std;
 using namespace string_literals;
 
@@ -27,6 +28,15 @@ float perimeter(const std::vector<cv::Point2f>& a)
     }
 
     return sum;
+}
+
+vector<Point2f> projectPoints(const vector<Point3f>& objectPoints,
+                              const Mat& rvec, const Mat& tvec,
+                              const Mat& cameraMatrix, const Mat& distCoeffs)
+{
+    vector<Point2f> points;
+    cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, points);
+    return points;
 }
 
 QVideoFilterRunnable* MarkerDetectorFilter::createFilterRunnable()
@@ -66,6 +76,8 @@ QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSu
                 marker.drawContours(frameMat, cv::Scalar{0, 255, 0});
 
             auto idStr = to_string(m_marksDetector.markers()[0].id());
+
+
             emit m_filter->markerFound(QString::fromStdString(idStr));
         }
     }
@@ -87,6 +99,10 @@ MarksDetector::MarksDetector()
     m_markerCorners2d.push_back(cv::Point2f(m_markerSize.width,0));
     m_markerCorners2d.push_back(cv::Point2f(m_markerSize.width,m_markerSize.height));
     m_markerCorners2d.push_back(cv::Point2f(0,m_markerSize.height));
+
+    FileStorage fs("cameraCalibration.xml", FileStorage::READ);
+    fs["CameraMatrix"] >> m_cameraMatrix;
+    fs["DistortionCoefficients"] >> m_distortion;
 }
 
 void MarksDetector::processFame(cv::Mat& grayscale)
@@ -101,6 +117,7 @@ void MarksDetector::processFame(cv::Mat& grayscale)
     findContours();
     findCandidates();
     recognizeCandidates();
+    estimatePose();
 }
 
 const std::vector<Marker> &MarksDetector::markers() const noexcept
@@ -247,6 +264,41 @@ void MarksDetector::recognizeCandidates()
     }
 }
 
+void MarksDetector::estimatePose()
+{
+    for(Marker& m : m_markers)
+    {
+        vector<Point3f> objectPoints = {Point3f(-1, -1, 0), Point3f(-1, 1, 0), Point3f(1, 1, 0), Point3f(1, -1, 0)};
+
+        Mat objectPointsMat(objectPoints);
+        Mat rvec, tvec;
+        solvePnP(objectPointsMat, m.points(), m_cameraMatrix, m_distortion, rvec, tvec);
+
+        vector<vector<Point3f>> lineIn3D =
+        {
+            {{-1.0f, -1.0f, 0.0f}, {-1.0f, -1.0f, 2.0f}},
+            {{-1.0f,  1.0f, 0.0f}, {-1.0f,  1.0f, 2.0f}},
+            {{ 1.0f, -1.0f, 0.0f}, { 1.0f, -1.0f, 2.0f}},
+            {{ 1.0f,  1.0f, 0.0f}, { 1.0f,  1.0f, 2.0f}},
+            {{-1.0f,  1.0f, 2.0f}, { 1.0f,  1.0f, 2.0f}},
+            {{-1.0f, -1.0f, 2.0f}, { 1.0f, -1.0f, 2.0f}},
+            {{-1.0f,  1.0f, 2.0f}, {-1.0f, -1.0f, 2.0f}},
+            {{ 1.0f,  1.0f, 2.0f}, { 1.0f, -1.0f, 2.0f}}
+        };
+
+        vector<vector<Point2f>> lineIn2D;
+        lineIn2D.reserve(lineIn3D.size());
+
+        std::transform(begin(lineIn3D), end(lineIn3D), back_inserter(lineIn2D),
+                       [&,this](const vector<cv::Point3f>& points3D)
+        {
+            return projectPoints(points3D, rvec, tvec, m_cameraMatrix, m_distortion);
+        });
+
+        m.setCube(lineIn2D);
+    }
+}
+
 void MarksDetector::filterContours()
 {
     qDebug() << "First " << m_contours.size();
@@ -289,10 +341,18 @@ void Marker::drawContours(cv::Mat& image, cv::Scalar color) const noexcept
 {
     float thickness = 1;
 
-    cv::line(image, m_points[0], m_points[1], color, thickness, CV_AA);
-    cv::line(image, m_points[1], m_points[2], color, thickness, CV_AA);
-    cv::line(image, m_points[2], m_points[3], color, thickness, CV_AA);
-    cv::line(image, m_points[3], m_points[0], color, thickness, CV_AA);
+    cv::line(image, m_points[0], m_points[1], m_color, thickness, CV_AA);
+    cv::line(image, m_points[1], m_points[2], m_color, thickness, CV_AA);
+    cv::line(image, m_points[2], m_points[3], m_color, thickness, CV_AA);
+    cv::line(image, m_points[3], m_points[0], m_color, thickness, CV_AA);
+
+    for(const auto& line2d : m_cube)
+        line(image, line2d[0], line2d[1], m_color, thickness, CV_AA);
+}
+
+void Marker::draw(Mat& image)
+{
+
 }
 
 cv::Mat Marker::checkFrame(const cv::Mat& image) const noexcept
@@ -545,6 +605,14 @@ void Marker::encodeData(const cv::Mat& dataImage)
                  << crcBits.to_ullong() << " calculated " << crc.checksum();
         return;
     }
+
+    auto r = (m_id & 0x0000ff) >> 0;
+    auto g = (m_id & 0x00ff00) >> 8;
+    auto b = (m_id & 0xff0000) >> 16;
+
+    m_color = Scalar(r, g, b);
+
+    qDebug() << "color is #" << hex << r << g << b << " id: " << m_id;
 
     m_isValid = true;
 }

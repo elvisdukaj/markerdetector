@@ -26,6 +26,9 @@ public:
     void precisePoints(const std::vector<cv::Point2f>& points) noexcept;
     void drawContours(cv::Mat& image, cv::Scalar color) const noexcept;
 
+    void setCube(std::vector<std::vector<cv::Point2f>>& cube) { m_cube = cube; }
+    void draw(cv::Mat& image);
+
 private:
     cv::Mat checkFrame(const cv::Mat& image) const noexcept;
     cv::Mat checkOrientationFrame(const cv::Mat& orientation) const noexcept;
@@ -36,6 +39,8 @@ private:
     const int m_minArea;
     bool m_isValid;
     std::vector<cv::Point2f> m_points;
+    std::vector<std::vector<cv::Point2f>> m_cube;
+    cv::Scalar m_color;
     uint64_t m_id;
 };
 
@@ -53,6 +58,7 @@ private:
     void findContours();
     void findCandidates();
     void recognizeCandidates();
+    void estimatePose();
 
     void filterContours();
 
@@ -67,6 +73,9 @@ private:
     const cv::Size m_markerSize;
     std::vector<cv::Point2f> m_markerCorners2d;
     std::vector<Marker> m_markers;
+
+    cv::Mat m_distortion;
+    cv::Mat m_cameraMatrix;
 };
 
 class MarkerDetectorFilterRunnable : public AbstractVideoFilterRunnable {
