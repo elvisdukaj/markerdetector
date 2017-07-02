@@ -78,7 +78,7 @@ void MarksDetector::findContours()
 
 void MarksDetector::findCandidates()
 {
-    vector<Point> approxCurve;
+    vector<Point2f> approxCurve;
     vector<vector<Point2f>> possibleMarkerPoints;
 
     // For each contour, analyze if it is a parallelepiped likely to be the marker
@@ -111,15 +111,7 @@ void MarksDetector::findCandidates()
             continue;
 
         // All tests are passed. Save marker candidate:
-        vector<Point2f> markerPoints;
-        markerPoints.reserve(4);
-
-        for (int i = 0; i<4; i++)
-            markerPoints.push_back(
-                        Point2f{
-                            static_cast<float>(approxCurve[i].x),
-                            static_cast<float>(approxCurve[i].y)
-                        });
+        vector<Point2f> markerPoints = approxCurve;
 
         // Sort the points in anti-clockwise order
         // Trace a line between the first and second point.
