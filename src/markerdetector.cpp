@@ -6,7 +6,7 @@
 using namespace cv;
 using namespace std;
 
-float perimeter(const std::vector<cv::Point2f>& a)
+float perimeter(const std::vector<Point2f>& a)
 {
     float sum=0, dx, dy;
 
@@ -23,9 +23,7 @@ float perimeter(const std::vector<cv::Point2f>& a)
     return sum;
 }
 
-vector<Point2f> projectPoints(const vector<Point3f>& objectPoints,
-                              const Mat& rvec, const Mat& tvec,
-                              const Mat& cameraMatrix, const Mat& distCoeffs)
+vector<Point2f> projectPoints(const vector<Point3f>& objectPoints, const Mat& rvec, const Mat& tvec, const Mat& cameraMatrix, const Mat& distCoeffs)
 {
     vector<Point2f> points;
     cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, points);
@@ -43,6 +41,9 @@ MarksDetector::MarksDetector()
     FileStorage fs("cameraCalibration.xml", FileStorage::READ);
     fs["CameraMatrix"] >> m_cameraMatrix;
     fs["DistortionCoefficients"] >> m_distortion;
+
+    if (!m_cameraMatrix.data || !m_distortion.data)
+        throw std::runtime_error{"cameraCalibration file not found be sure to calibrate first"};
 }
 
 void MarksDetector::processFame(Mat& grayscale)

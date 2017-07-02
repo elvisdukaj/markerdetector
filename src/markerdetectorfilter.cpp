@@ -10,8 +10,13 @@ QVideoFilterRunnable* MarkerDetectorFilter::createFilterRunnable()
 }
 
 MarkerDetectorFilterRunnable::MarkerDetectorFilterRunnable(MarkerDetectorFilter* filter)
-    : m_filter{filter}
+try : m_filter{filter}, m_marksDetector{}
 {
+}
+catch(const runtime_error& err)
+{
+    std::cerr << err.what() << std::endl;
+    throw;
 }
 
 QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSurfaceFormat&, QVideoFilterRunnable::RunFlags)
@@ -48,7 +53,7 @@ QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSu
 
         emit m_filter->markerFound(QString::fromStdString(idStr));
     }
-    catch(const std::exception& exc)
+    catch(const exception& exc)
     {
         cerr << exc.what();
     }
