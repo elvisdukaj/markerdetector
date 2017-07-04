@@ -43,7 +43,10 @@ MarksDetector::MarksDetector()
     fs["DistortionCoefficients"] >> m_distortion;
 
     if (!m_cameraMatrix.data || !m_distortion.data)
+    {
+        cerr << "Calibrate first!" << endl;
         throw std::runtime_error{"cameraCalibration file not found be sure to calibrate first"};
+    }
 }
 
 void MarksDetector::processFame(Mat& grayscale)

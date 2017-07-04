@@ -1,5 +1,7 @@
 #include "markerdetectorfilter.h"
+#include <opencv2/highgui.hpp>
 #include <iostream>
+
 
 using namespace std;
 using namespace string_literals;
@@ -12,6 +14,13 @@ QVideoFilterRunnable* MarkerDetectorFilter::createFilterRunnable()
 MarkerDetectorFilterRunnable::MarkerDetectorFilterRunnable(MarkerDetectorFilter* filter)
 try : m_filter{filter}, m_marksDetector{}
 {
+    m_pattern = cv::imread("pattern.bmp", CV_LOAD_IMAGE_COLOR);
+
+    if (!m_pattern.data)
+    {
+        cerr << "Unable to open pattern.bmp";
+        throw runtime_error{"Unable to open pattern.bmp"};
+    }
 }
 catch(const runtime_error& err)
 {
@@ -47,6 +56,7 @@ QVideoFrame MarkerDetectorFilterRunnable::run(QVideoFrame* frame, const QVideoSu
             for(const Marker& marker : m_marksDetector.markers())
             {
                 idStr += to_string(marker.id()) + " "s;
+//              marker.drawImage(frameMat, m_pattern);
                 marker.drawContours(frameMat, 3);
             }
         }

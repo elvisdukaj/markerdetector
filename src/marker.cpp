@@ -1,6 +1,7 @@
 #include "marker.h"
 #include <boost/crc.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <bitset>
 #include <iostream>
 
@@ -8,12 +9,18 @@ using namespace cv;
 using namespace std;
 
 Marker::Marker(const Mat& image, const vector<Point2f>& points)
-    : m_squareSize{image.size() / 12}
+    : m_markerSize{image.size()}
+    , m_squareSize{image.size() / 12}
     , m_minArea{m_squareSize.area() / 2}
     , m_isValid{false}
     , m_points{points}
     , m_color{Scalar::all(255)}
 {
+    m_undistortedPoints.emplace_back(0.0f,0.0f);
+    m_undistortedPoints.emplace_back(static_cast<float>(m_markerSize.width),0.0f);
+    m_undistortedPoints.emplace_back(static_cast<float>(m_markerSize.width),static_cast<float>(m_markerSize.height));
+    m_undistortedPoints.emplace_back(0.0f, static_cast<float>(m_markerSize.height));
+
     auto orientation = checkFrame(image);
 
     if (orientation.empty())
@@ -43,20 +50,26 @@ void Marker::drawContours(Mat& image, int thickness) const noexcept
         line(image, line2d[0], line2d[1], m_color, thickness, CV_AA);
 }
 
-void Marker::drawImage(Mat& frame, const Mat& image)
+void Marker::drawImage(Mat& frame, const Mat& image) const
 {
     Mat copyOfImage(image.size(), image.type(), Scalar::all(0));
     Mat negativeOfImage(image.size(), image.type(), Scalar::all(0));
     Mat blank(frame.size(), frame.type(), Scalar::all(0));
 
-    vector<Point2f> perspectivePoints;
-    auto M = getPerspectiveTransform(m_points, perspectivePoints);
+    auto M = getPerspectiveTransform(m_points, m_undistortedPoints);
 
     warpPerspective(frame, negativeOfImage, M, negativeOfImage.size());
     warpPerspective(blank, copyOfImage, M, copyOfImage.size());
+    imshow("negative", negativeOfImage);
+    imshow("        2", copyOfImage);
+
+    waitKey(1);
+    return;
+
     bitwise_not(copyOfImage, copyOfImage);
     bitwise_and(copyOfImage, image, copyOfImage);
     bitwise_or(copyOfImage, negativeOfImage, image);
+
 }
 
 Mat Marker::checkFrame(const Mat& image) const noexcept

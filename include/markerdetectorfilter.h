@@ -24,4 +24,5 @@ public:
 private:
     MarkerDetectorFilter* m_filter;
     MarksDetector m_marksDetector;
+    cv::Mat m_pattern;
 };
