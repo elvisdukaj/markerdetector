@@ -15,6 +15,7 @@ public:
     void drawContours(cv::Mat& image, int thickness) const noexcept;
 
     void setCube(std::vector<std::vector<cv::Point2f>>& cube) { m_cube = cube; }
+    void drawImage(cv::Mat& frame, const cv::Mat& image);
 
 private:
     cv::Mat checkFrame(const cv::Mat& image) const noexcept;

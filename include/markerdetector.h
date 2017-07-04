@@ -18,6 +18,8 @@ private:
     void recognizeCandidates();
     void estimatePose();
 
+    void applyImage(const cv::Mat& image);
+
 private:
     int m_minCountournSize;
     uint64_t m_id;

@@ -43,6 +43,22 @@ void Marker::drawContours(Mat& image, int thickness) const noexcept
         line(image, line2d[0], line2d[1], m_color, thickness, CV_AA);
 }
 
+void Marker::drawImage(Mat& frame, const Mat& image)
+{
+    Mat copyOfImage(image.size(), image.type(), Scalar::all(0));
+    Mat negativeOfImage(image.size(), image.type(), Scalar::all(0));
+    Mat blank(frame.size(), frame.type(), Scalar::all(0));
+
+    vector<Point2f> perspectivePoints;
+    auto M = getPerspectiveTransform(m_points, perspectivePoints);
+
+    warpPerspective(frame, negativeOfImage, M, negativeOfImage.size());
+    warpPerspective(blank, copyOfImage, M, copyOfImage.size());
+    bitwise_not(copyOfImage, copyOfImage);
+    bitwise_and(copyOfImage, image, copyOfImage);
+    bitwise_or(copyOfImage, negativeOfImage, image);
+}
+
 Mat Marker::checkFrame(const Mat& image) const noexcept
 {
     const Rect topLineRect{
