@@ -1,0 +1,1 @@
+Recognize the marker and apply a cube over it
