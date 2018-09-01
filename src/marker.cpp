@@ -64,13 +64,13 @@ void Marker::precisePoints(const std::vector<Point2f>& points) noexcept
 
 void Marker::drawContours(Mat& image, int thickness) const noexcept
 {
-    line(image, m_points[0], m_points[1], m_color, thickness, CV_AA);
-    line(image, m_points[1], m_points[2], m_color, thickness, CV_AA);
-    line(image, m_points[2], m_points[3], m_color, thickness, CV_AA);
-    line(image, m_points[3], m_points[0], m_color, thickness, CV_AA);
+    line(image, m_points[0], m_points[1], m_color, thickness, cv::LINE_AA);
+    line(image, m_points[1], m_points[2], m_color, thickness, cv::LINE_AA);
+    line(image, m_points[2], m_points[3], m_color, thickness, cv::LINE_AA);
+    line(image, m_points[3], m_points[0], m_color, thickness, cv::LINE_AA);
 
     for(const auto& line2d : m_cube)
-        line(image, line2d[0], line2d[1], m_color, thickness, CV_AA);
+        line(image, line2d[0], line2d[1], m_color, thickness, cv::LINE_AA);
 }
 
 void Marker::drawImage(Mat& frame, const Mat& image) const

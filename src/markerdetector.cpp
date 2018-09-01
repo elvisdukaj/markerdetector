@@ -62,6 +62,7 @@ MarksDetector::MarksDetector()
     m_markerCorners2d.push_back(Point2f{0.0f, static_cast<float>(m_markerSize.height)});
 
     FileStorage fs("cameraCalibration.xml", FileStorage::READ);
+
     fs["CameraMatrix"] >> m_cameraMatrix;
     fs["DistortionCoefficients"] >> m_distortion;
 

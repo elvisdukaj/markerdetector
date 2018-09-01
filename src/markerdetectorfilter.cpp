@@ -34,15 +34,15 @@ QVideoFilterRunnable* MarkerDetectorFilter::createFilterRunnable()
 }
 
 MarkerDetectorFilterRunnable::MarkerDetectorFilterRunnable(MarkerDetectorFilter* filter)
-try : m_filter{filter}, m_marksDetector{}
+try : m_filter{filter}
 {
-    m_pattern = cv::imread("pattern.bmp", CV_LOAD_IMAGE_COLOR);
+//    m_pattern = cv::imread("pattern.bmp", cv::IMREAD_COLOR);
 
-    if (!m_pattern.data)
-    {
-        cerr << "Unable to open pattern.bmp";
-        throw runtime_error{"Unable to open pattern.bmp"};
-    }
+//    if (!m_pattern.data)
+//    {
+//        cerr << "Unable to open pattern.bmp";
+//        throw runtime_error{"Unable to open pattern.bmp"};
+//    }
 }
 catch(const runtime_error& err)
 {

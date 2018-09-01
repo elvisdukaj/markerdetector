@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt5 COMPONENTS Core Quick Multimedia REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED imgproc calib3d)
 find_package(Boost REQUIRED)
 
 include_directories(include)
